@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: linkwarden_pg
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    restart: always
+    volumes:
+      - ${LINK_DIR}/pgdata:/var/lib/postgresql/data
+    networks:
+      - linkwarden_net  
+
+  linkwarden:
+    container_name: linkwarden
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+      - CUSTOM_OPENAI_BASE_URL=${CUSTOM_OPENAI_BASE_URL}
+    restart: always
+    # build: . # uncomment this line to build from source
+    image: ghcr.io/linkwarden/linkwarden:latest # comment this line to build from source
+    ports:
+      - 4000:3000
+    volumes:
+      - ${LINK_DIR}/data:/data/data
+    depends_on:
+      - postgres
+    networks:
+      - linkwarden_net  
+
+networks:
+    linkwarden_net: 
+        driver: bridge
